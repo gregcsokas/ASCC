@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from starlette.requests import Request
 from starlette.responses import Response
 
+import app.core.logging_config
 from app.core.version import get_version
 
 logger = logging.getLogger(__name__)
