@@ -5,7 +5,7 @@ services:
         command: ["postgres", "-c", "log_statement=all", "-c", "log_destination=stderr"]
         environment:
             POSTGRES_USER: ascc
-            POSTGRES_PASSWORD: root
+            POSTGRES_PASSWORD: ascc_root
             POSTGRES_DB: ascc
         ports:
             - "5432:5432"
@@ -19,6 +19,8 @@ services:
         build:
             context: backend
             dockerfile: Dockerfile
+        env_file:
+            - .env
         container_name: ascc_backend
         ports:
             - "8080:8080"
