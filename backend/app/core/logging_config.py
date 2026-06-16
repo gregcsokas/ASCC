@@ -5,16 +5,12 @@ from app.core.settings import settings
 
 LOGGING_CONFIG = {
     "version": 1,
-    "disable_existing_loggers": False,
+    "disable_existing_loggers": True,
     "formatters": {
         "default": {
             "()": "uvicorn.logging.DefaultFormatter",
             "fmt": "%(asctime)s - %(levelname)s - %(message)s",
             "use_colors": None,
-        },
-        "access": {
-            "()": "uvicorn.logging.AccessFormatter",
-            "fmt": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         },
         "standard": {
             "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -26,12 +22,6 @@ LOGGING_CONFIG = {
             "formatter": "default",
             "class": "logging.StreamHandler",
             "stream": "ext://sys.stderr",
-        },
-        "uvicorn_access": {
-            "level": settings.LOG_LEVEL,
-            "formatter": "access",
-            "class": "logging.StreamHandler",
-            "stream": "ext://sys.stdout",
         },
         "app_default": {
             "level": settings.LOG_LEVEL,
@@ -56,7 +46,7 @@ LOGGING_CONFIG = {
         },
         "uvicorn.access": {
             "level": settings.LOG_LEVEL,
-            "handlers": ["uvicorn_access"],
+            "handlers": [],
             "propagate": False,
         },
         "tortoise.db_client": {

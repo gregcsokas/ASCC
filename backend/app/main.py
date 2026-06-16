@@ -28,12 +28,17 @@ app = FastAPI(
 @app.middleware("http")
 async def log_request(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
     """Middleware to log incoming requests."""
-    start_time = time.time()
+    start_time = time.perf_counter()
 
     response = await call_next(request)
 
-    process_time = time.time() - start_time
-    logger.info(f"{request.method} {request.url.path} Status: {response.status_code} Process time: {process_time:.4f}s")
+    process_time = time.perf_counter() - start_time
+    client = request.client
+    client_addr = f"{client.host}:{client.port}" if client else "-"
+    logger.info(
+        f"{client_addr} - {request.method} {request.url.path} "
+        f"Status: {response.status_code} Process time: {process_time:.4f}s"
+    )
     return response
 
 @app.get("/health")
