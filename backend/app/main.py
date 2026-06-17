@@ -3,7 +3,7 @@ import time
 from contextlib import asynccontextmanager
 from typing import AsyncIterator, Awaitable, Callable
 
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter
 from starlette.requests import Request
 from starlette.responses import Response
 from tortoise.contrib.fastapi import tortoise_exception_handlers
@@ -46,7 +46,7 @@ async def log_request(request: Request, call_next: Callable[[Request], Awaitable
     )
     return response
 
-app.include_router(accidents_router)
+app.include_router(accidents_router, prefix="/api")
 
 @app.get("/health")
 async def health_check() -> dict:
