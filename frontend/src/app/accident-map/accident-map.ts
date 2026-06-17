@@ -8,6 +8,18 @@ import {
 import * as L from 'leaflet';
 import {AccidentApi} from './accident-api';
 
+const SEVERRITY_COLORS: Record<string, string> = {
+  'Fatal': '#ff5252',
+  'Non-Fatal': '#ffa726',
+  'Incident': '#29b6f6'
+};
+const UNKNOWN_SEVERITY_COLOR = '#9e9e9e';
+
+function severityColor(severity: string | null): string {
+  if (severity && severity in SEVERRITY_COLORS) return SEVERRITY_COLORS[severity];
+  return UNKNOWN_SEVERITY_COLOR;
+}
+
 @Component({
   selector: 'app-accident-map',
   template: `<div #mapEl class="map"></div>`,
@@ -47,11 +59,12 @@ export class AccidentMap implements AfterViewInit, OnDestroy {
     this.api.listForYear(year).subscribe((response) => {
       this.markers?.clearLayers();
       for (const item of response.items) {
+        const color = severityColor(item.severity);
         L.circleMarker([item.latitude, item.longitude], {
           radius: 4,
-          color: '#ff5252',
+          color,
           weight: 1,
-          fillColor: '#ff5252',
+          fillColor: color,
           fillOpacity: 0.7,
         })
           .bindPopup(
