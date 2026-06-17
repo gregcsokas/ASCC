@@ -3,7 +3,7 @@ import time
 from contextlib import asynccontextmanager
 from typing import AsyncIterator, Awaitable, Callable
 
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI
 from starlette.requests import Request
 from starlette.responses import Response
 from tortoise.contrib.fastapi import tortoise_exception_handlers

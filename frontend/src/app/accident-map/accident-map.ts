@@ -7,7 +7,6 @@ import {
 } from '@angular/core';
 import * as L from 'leaflet';
 import {AccidentApi, AccidentDetail, FilterOptions} from './accident-api';
-import {filters} from 'css-select';
 
 const SEVERITY_COLORS: Record<string, string> = {
   'Fatal': '#ff5252',
