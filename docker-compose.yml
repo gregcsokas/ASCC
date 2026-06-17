@@ -2,11 +2,15 @@ services:
     postgres:
         image: postgres:alpine
         container_name: ascc_database
-        command: ["postgres", "-c", "log_statement=all", "-c", "log_destination=stderr"]
         environment:
             POSTGRES_USER: ascc
             POSTGRES_PASSWORD: ascc_root
             POSTGRES_DB: ascc
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U ascc -d ascc"]
+            interval: 3s
+            timeout: 3s
+            retries: 10
         ports:
             - "5432:5432"
         networks:
@@ -14,6 +18,24 @@ services:
         volumes:
             - pg_data:/var/lib/postgresql
         restart: on-failure:3
+
+    migrate:
+        build:
+            context: backend
+            dockerfile: Dockerfile
+        command: >
+            sh -c "uv run tortoise -c app.core.database.TORTOISE_ORM upgrade &&
+            uv run python -m app.cli accidents ingest /data/AviationData_SSC_case_Ranbir.csv"
+        env_file:
+            - .env
+        volumes:
+            - ./backend/app:/code/app
+            - ./data:/data:ro
+        depends_on:
+            postgres:
+                condition: service_healthy
+        networks: [ascc-network]
+        restart: "no"
 
     app:
         build:
@@ -29,7 +51,8 @@ services:
         volumes:
             - ./backend/app:/code/app
         depends_on:
-            - postgres
+            migrate:
+                condition: service_completed_successfully
         restart: on-failure:3
 
 volumes:
