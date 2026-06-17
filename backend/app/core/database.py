@@ -1,12 +1,16 @@
 import logging
+from functools import partial
 
-from tortoise import Tortoise
-from tortoise.log import logger as tortoise_logger
+from tortoise.contrib.fastapi import RegisterTortoise
 
 from app.core.settings import settings
 
 logger = logging.getLogger(__name__)
 
+MODEL_MODULES = [
+    "app.accidents.models",
+    "app.accidents.lookup_tables",
+]
 
 TORTOISE_ORM = {
     "connections": {
@@ -14,7 +18,7 @@ TORTOISE_ORM = {
     },
     "apps": {
         "models": {
-            "models": [],
+            "models": [*MODEL_MODULES],
             "default_connection": "default",
             "migrations": "app.migrations",
         },
@@ -23,24 +27,7 @@ TORTOISE_ORM = {
     "timezone": "UTC",
 }
 
-async def init_db() -> None:
-
-    try:
-        await Tortoise.init(
-            config=TORTOISE_ORM,
-            _enable_global_fallback=True
-        )
-
-        tortoise_logger.setLevel(settings.LOG_LEVEL)
-
-        await Tortoise.generate_schemas()
-
-        logger.info("Database initialization completed successfully")
-    except Exception as e:
-        logger.error(f"Error initializing database: {e}")
-        raise
-
-async def close_db() -> None:
-    logger.info("Closing database connections")
-    await Tortoise.close_connections()
-    logger.info("Database connections closed")
+register_orm = partial(
+    RegisterTortoise,
+    config=TORTOISE_ORM,
+)
