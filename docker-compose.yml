@@ -55,6 +55,21 @@ services:
                 condition: service_completed_successfully
         restart: on-failure:3
 
+    frontend:
+        build:
+            context: frontend
+            dockerfile: Dockerfile
+        container_name: ascc_frontend
+        ports:
+            - "4200:80"
+        environment:
+            BACKEND_URL: http://app:8080
+        networks:
+            - ascc-network
+        depends_on:
+            - app
+        restart: on-failure:3
+
 volumes:
   pg_data:
 
