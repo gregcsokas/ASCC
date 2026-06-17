@@ -1,12 +1,13 @@
 import {
   AfterViewInit,
-  Component,
+  Component, computed,
   ElementRef, inject,
-  OnDestroy,
+  OnDestroy, signal,
   viewChild,
 } from '@angular/core';
 import * as L from 'leaflet';
-import {AccidentApi} from './accident-api';
+import {AccidentApi, FilterOptions} from './accident-api';
+import {filters} from 'css-select';
 
 const SEVERRITY_COLORS: Record<string, string> = {
   'Fatal': '#ff5252',
@@ -22,19 +23,91 @@ function severityColor(severity: string | null): string {
 
 @Component({
   selector: 'app-accident-map',
-  template: `<div #mapEl class="map"></div>`,
+  template: `
+    <div #mapEl class="map"></div>
+
+    @if (filters(); as f) {
+      <div class="filters">
+        <label>
+          <span>Year</span>
+          <select [value]="selectedYear()" (change)="onYear($event)">
+            @for (y of years(); track y) {
+              <option [value]="y">{{ y }}</option>
+            }
+          </select>
+        </label>
+
+        <label>
+          <span>Severity</span>
+          <select [value]="selectedSeverity()" (change)="onSeverity($event)">
+            <option value="">All</option>
+            @for (s of f.severities; track s) {
+              <option [value]="s">{{ s }}</option>
+            }
+          </select>
+        </label>
+
+        <label>
+          <span>Country</span>
+          <select [value]="selectedCountry()" (change)="onCountry($event)">
+            <option value="">All</option>
+            @for (c of f.countries; track c) {
+              <option [value]="c">{{ c }}</option>
+            }
+          </select>
+        </label>
+      </div>
+    }
+  `,
   styles: `
     .map {
       position: fixed;
       inset: 0;
     }
+
+    .filters {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      z-index: 1000;
+      display: flex;
+      gap: 10px;
+      padding: 10px 12px;
+      background: rgba(22, 22, 26, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      color: #e8e8e8;
+      font: 13px/1.2 system-ui, sans-serif;
+    }
+    .filters label { display: flex; flex-direction: column; gap: 4px; }
+    .filters span { opacity: 0.7; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .filters select {
+      background: #2a2a30;
+      color: #e8e8e8;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 5px;
+      padding: 5px 8px;
+    }
   `,
 })
+
 export class AccidentMap implements AfterViewInit, OnDestroy {
   private readonly mapEl = viewChild.required<ElementRef<HTMLDivElement>>('mapEl');
   private readonly api = inject(AccidentApi);
+
   private map?: L.Map;
   private markers?: L.LayerGroup;
+
+  protected readonly filters = signal<FilterOptions | null>(null);
+  protected readonly selectedYear = signal<number | null>(null);
+  protected readonly selectedSeverity = signal('');
+  protected readonly selectedCountry = signal('');
+
+  protected readonly years = computed(() => {
+    const f = this.filters();
+    return f ? [...f.years].sort((a, b) => b - a) : [];
+  });
+
 
   ngAfterViewInit(): void {
     this.map = L.map(this.mapEl().nativeElement, {
@@ -52,29 +125,56 @@ export class AccidentMap implements AfterViewInit, OnDestroy {
 
     this.markers = L.layerGroup().addTo(this.map);
 
-    this.loadYear(2019);
+    this.api.getFilters().subscribe((f) => {
+      this.filters.set(f);
+      this.selectedYear.set(f.years.length ? Math.max(...f.years) : null);
+      this.reload();
+    });
   }
 
-  private loadYear(year: number): void {
-    this.api.listForYear(year).subscribe((response) => {
-      this.markers?.clearLayers();
-      for (const item of response.items) {
-        const color = severityColor(item.severity);
-        L.circleMarker([item.latitude, item.longitude], {
-          radius: 4,
-          color,
-          weight: 1,
-          fillColor: color,
-          fillOpacity: 0.7,
-        })
-          .bindPopup(
-            `<strong>${item.location ?? 'Unknown'}</strong><br><small>${item.event_date}</small>`
-          )
-          .addTo(this.markers!);
-      }
-      console.log(`${year}: ${response.mapped_count} / ${response.total_count} has coordinates`);
-      }
-    )
+  protected onYear(e: Event): void {
+    this.selectedYear.set(Number((e.target as HTMLInputElement).value));
+    this.reload();
+  }
+
+  protected onSeverity(e: Event): void {
+    this.selectedSeverity.set((e.target as HTMLInputElement).value);
+    this.reload();
+  }
+
+  protected onCountry(e: Event): void {
+    this.selectedCountry.set((e.target as HTMLSelectElement).value);
+    this.reload();
+  }
+
+  private reload(): void {
+    const year = this.selectedYear();
+    if (year == null) return;
+
+    this.api
+      .list({
+        year,
+        severity: this.selectedSeverity() || undefined,
+        country: this.selectedCountry() || undefined,
+      })
+      .subscribe((res) => {
+        this.markers?.clearLayers();
+        for (const item of res.items) {
+          const color = severityColor(item.severity);
+          L.circleMarker([item.latitude, item.longitude], {
+            radius: 4,
+            color,
+            weight: 1,
+            fillColor: color,
+            fillOpacity: 0.7,
+          })
+            .bindPopup(
+              `<strong>${item.location ?? 'Unknown'}</strong><br>${item.event_date}` +
+                (item.severity ? `<br>${item.severity}` : ''),
+            )
+            .addTo(this.markers!);
+        }
+      });
   }
 
   ngOnDestroy(): void {
