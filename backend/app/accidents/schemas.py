@@ -70,3 +70,5 @@ class FilterOptions(BaseModel):
     severities: list[str]
     countries: list[str]
     aircraft_categories: list[str]
+    flight_purposes: list[str]
+    flight_phases: list[str]

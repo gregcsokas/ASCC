@@ -4,7 +4,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException, Query
 
-from app.accidents.lookup_tables import AircraftCategory, Country
+from app.accidents.lookup_tables import AircraftCategory, Country, FlightPhase, FlightPurpose
 from app.accidents.models import Aircraft, Event
 from app.accidents.schemas import (
     AccidentDetail,
@@ -24,6 +24,9 @@ async def list_accidents(
     year: int = Query(..., ge=1900, le=2100, description="Event year"),
     severity: Severity | None = Query(None, description="Severity filter"),
     country: str | None = Query(None, description="Country filter"),
+    category: str | None = Query(None, description="Aircraft category filter"),
+    purpose: str | None = Query(None, description="Purpose filter"),
+    phase: str | None = Query(None, description="Phase filter"),
 ) -> AccidentMapResponse:
     qs = Event.filter(event_year=year)
 
@@ -31,6 +34,17 @@ async def list_accidents(
         qs = qs.filter(max_severity=severity)
     if country is not None:
         qs = qs.filter(country__name=country)
+
+    if category is not None or purpose is not None or phase is not None:
+        aq = Aircraft.filter(event__event_year=year)
+        if category is not None:
+            aq = aq.filter(category__name=category)
+        if purpose is not None:
+            aq = aq.filter(purpose__name=purpose)
+        if phase is not None:
+            aq = aq.filter(broad_phase_of_flight__name=phase)
+        event_ids = set(await aq.values_list("event_id", flat=True))
+        qs = qs.filter(id__in=event_ids)
 
     total = await qs.count()
     mappable = qs.filter(latitude__isnull=False, longitude__isnull=False)
@@ -59,21 +73,26 @@ async def list_accidents(
         )
         for r in rows
     ]
-    return AccidentMapResponse(year=year, total_count=total, mapped_count=mapped, items=items)
+    return AccidentMapResponse(
+        year=year, total_count=total, mapped_count=mapped, items=items
+    )
 
 
 @router.get("/filters", response_model=FilterOptions)
 async def get_filters() -> FilterOptions:
-    years = sorted(
-        await Event.all().distinct().values_list("event_year", flat=True)
-    )
+    years = sorted(await Event.all().distinct().values_list("event_year", flat=True))
     countries = sorted(await Country.all().values_list("name", flat=True))
     categories = sorted(await AircraftCategory.all().values_list("name", flat=True))
+    purposes = sorted(await FlightPurpose.all().values_list("name", flat=True))
+    phases = sorted(await FlightPhase.all().values_list("name", flat=True))
+    
     return FilterOptions(
         years=years,
         severities=[s.value for s in Severity],
         countries=countries,
         aircraft_categories=categories,
+        flight_purposes=purposes,
+        flight_phases=phases,
     )
 
 
