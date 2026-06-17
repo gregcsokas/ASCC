@@ -4,6 +4,7 @@ LABEL maintainer="Gergő Csókás <gergo.csokas@gmail.com>"
 WORKDIR /code
 COPY /app /code/app
 COPY pyproject.toml /code/
+COPY uv.lock /code/
 
 RUN ["uv", "sync"]
 
