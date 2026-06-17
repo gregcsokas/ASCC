@@ -92,8 +92,4 @@ export class AccidentApi {
     if (query.phase) params = params.set('phase', query.phase);
     return this.http.get<AccidentMapResponse>('/api/accidents', { params });
   }
-
-  listForYear(year: number): Observable<AccidentMapResponse> {
-    return this.http.get<AccidentMapResponse>(`/api/accidents`, { params: { year } });
-  }
 }
