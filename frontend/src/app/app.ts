@@ -1,9 +1,9 @@
 import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import {AccidentMap} from './accident-map/accident-map';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [AccidentMap],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
