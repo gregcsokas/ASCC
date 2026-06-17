@@ -6,8 +6,11 @@ from typing import AsyncIterator, Awaitable, Callable
 from fastapi import FastAPI
 from starlette.requests import Request
 from starlette.responses import Response
+from tortoise.contrib.fastapi import tortoise_exception_handlers
 
 import app.core.logging_config
+from app.accidents.routers import router as accidents_router
+from app.core.database import register_orm
 from app.core.version import get_version
 
 logger = logging.getLogger(__name__)
@@ -16,13 +19,15 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Lifespan event handler."""
-    yield
+    async with register_orm(app):
+        yield
 
 app = FastAPI(
     title="ASCC",
     description="Aviation Safety Coding Challenge",
     version=get_version(),
-    lifespan=lifespan
+    lifespan=lifespan,
+    exception_handlers=tortoise_exception_handlers()
 )
 
 @app.middleware("http")
@@ -40,6 +45,8 @@ async def log_request(request: Request, call_next: Callable[[Request], Awaitable
         f"Status: {response.status_code} Process time: {process_time:.4f}s"
     )
     return response
+
+app.include_router(accidents_router)
 
 @app.get("/health")
 async def health_check() -> dict:
