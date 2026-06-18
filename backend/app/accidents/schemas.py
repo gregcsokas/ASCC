@@ -23,12 +23,21 @@ class AccidentMapItem(BaseModel):
     severity: Severity | None = None
     investigation_type: InvestigationType
 
+class AccidentListItem(BaseModel):
+    id: int
+    event_id: str
+    event_date: date
+    location: str | None = None
+    severity: Severity | None = None
+    investigation_type: InvestigationType
+
 
 class AccidentMapResponse(BaseModel):
     year: int
     total_count: int
     mapped_count: int
     items: list[AccidentMapItem]
+    unmapped: list[AccidentListItem]
 
 
 class AircraftDetail(BaseModel):

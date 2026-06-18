@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 
 from fastapi import APIRouter, HTTPException, Query
+from tortoise.expressions import Q
 
 from app.accidents.lookup_tables import AircraftCategory, Country, FlightPhase, FlightPurpose
 from app.accidents.models import Aircraft, Event
@@ -12,6 +13,7 @@ from app.accidents.schemas import (
     AccidentMapResponse,
     AircraftDetail,
     FilterOptions,
+    AccidentListItem,
 )
 from app.accidents.value_sets import Severity
 
@@ -73,8 +75,37 @@ async def list_accidents(
         )
         for r in rows
     ]
+
+    unmapped_rows = (
+        await qs.filter(Q(latitude__isnull=True) | Q(longitude__isnull=True))
+        .order_by("event_date")
+        .values(
+            "id",
+            "event_id",
+            "event_date",
+            "location",
+            "max_severity",
+            "investigation_type",
+        )
+    )
+    unmapped = [
+        AccidentListItem(
+            id=r["id"],
+            event_id=r["event_id"],
+            event_date=r["event_date"],
+            location=r["location"],
+            severity=r["max_severity"],
+            investigation_type=r["investigation_type"],
+        )
+        for r in unmapped_rows
+    ]
+    
     return AccidentMapResponse(
-        year=year, total_count=total, mapped_count=mapped, items=items
+        year=year,
+        total_count=total,
+        mapped_count=mapped,
+        items=items,
+        unmapped=unmapped
     )
 
 
