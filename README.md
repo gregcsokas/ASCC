@@ -1,3 +1,5 @@
+[![wakatime](https://wakatime.com/badge/user/11e4d906-bc72-4af7-a9a2-5dec7be8a3e2/project/082356ef-ac29-4ed7-9131-32c7f82714b5.svg)](https://wakatime.com/badge/user/11e4d906-bc72-4af7-a9a2-5dec7be8a3e2/project/082356ef-ac29-4ed7-9131-32c7f82714b5)
+
 # ASCC
 Aviation Safety Coding Challenge
 
