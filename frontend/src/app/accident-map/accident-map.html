@@ -101,3 +101,20 @@
     }
   </aside>
 }
+
+@if (unmapped().length) {
+  <aside class="unmapped">
+    <h3>No coordinates ({{ unmapped().length }})</h3>
+    <ul>
+      @for (item of unmapped(); track item.event_id) {
+        <li>
+          <button type="button" class="link" (click)="openDetail(item.event_id)">
+            <i class="dot" [style.background]="severityColor(item.severity)"></i>
+            <span class="loc">{{ item.location ?? item.event_id }}</span>
+            <span class="date">{{ item.event_date }}</span>
+          </button>
+        </li>
+      }
+    </ul>
+  </aside>
+}

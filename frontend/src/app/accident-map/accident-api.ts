@@ -14,11 +14,21 @@ export interface AccidentMapItem {
   investigation_type: string;
 }
 
+export interface AccidentListItem {
+  id: number;
+  event_id: string;
+  event_date: string;
+  location: string | null;
+  severity: string | null;
+  investigation_type: string;
+}
+
 export interface AccidentMapResponse {
   year: number;
   total_count: number;
   mapped_count: number;
   items: AccidentMapItem[];
+  unmapped: AccidentListItem[];
 }
 
 export interface FilterOptions {

@@ -1,17 +1,40 @@
 .map { position: fixed; inset: 0; }
 
 .filters {
-  position: fixed; top: 12px; right: 12px; z-index: 1000;
+  position: fixed; top: 12px; left: 50%; right: auto; z-index: 1000; transform: translateX(-50%);
   display: flex; gap: 10px; padding: 10px 12px;
   background: rgba(22, 22, 26, 0.88); border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px; color: #e8e8e8; font: 13px/1.2 system-ui, sans-serif;
 }
+
 .filters label { display: flex; flex-direction: column; gap: 4px; }
 .filters span { opacity: 0.7; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
 .filters select {
   background: #2a2a30; color: #e8e8e8; border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 5px; padding: 5px 8px;
 }
+
+.unmapped {
+  position: fixed; top: 12px; right: 12px; bottom: 12px; z-index: 1000;
+  width: 280px; display: flex; flex-direction: column;
+  background: rgba(18, 18, 22, 0.96); border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px; color: #e8e8e8; font: 13px/1.4 system-ui, sans-serif;
+}
+.unmapped h3 {
+  margin: 0; padding: 12px 14px; font-size: 12px; opacity: 0.7;
+  text-transform: uppercase; letter-spacing: 0.04em;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.unmapped ul { margin: 0; padding: 4px; list-style: none; overflow-y: auto; }
+.unmapped li { margin: 0; }
+.unmapped .link {
+  width: 100%; display: flex; align-items: center; gap: 8px;
+  padding: 6px 8px; background: transparent; border: none; border-radius: 5px;
+  color: #cfe3ff; font: inherit; text-align: left; cursor: pointer;
+}
+.unmapped .link:hover { background: rgba(255, 255, 255, 0.06); }
+.unmapped .loc { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.unmapped .date { opacity: 0.55; font-size: 11px; }
 
 .legend {
   position: fixed; bottom: 12px; left: 12px; z-index: 900;

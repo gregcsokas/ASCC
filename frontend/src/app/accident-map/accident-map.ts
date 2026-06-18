@@ -6,7 +6,7 @@ import {
   viewChild,
 } from '@angular/core';
 import * as L from 'leaflet';
-import {AccidentApi, AccidentDetail, FilterOptions} from './accident-api';
+import { AccidentApi, AccidentDetail, AccidentListItem, FilterOptions } from './accident-api';
 
 const SEVERITY_COLORS: Record<string, string> = {
   'Fatal': '#ff5252',
@@ -43,6 +43,8 @@ export class AccidentMap implements AfterViewInit, OnDestroy {
 
   protected readonly severityColor = severityColor;
   protected readonly legend = SEVERITY_LEGEND;
+
+  protected readonly unmapped = signal<AccidentListItem[]>([]);
 
   protected readonly filters = signal<FilterOptions | null>(null);
   protected readonly selectedYear = signal<number | null>(null);
@@ -139,6 +141,7 @@ export class AccidentMap implements AfterViewInit, OnDestroy {
       })
       .subscribe((res) => {
         this.markers?.clearLayers();
+        this.unmapped.set(res.unmapped);
         for (const item of res.items) {
           const color = severityColor(item.severity);
           const marker = L.circleMarker([item.latitude, item.longitude], {
